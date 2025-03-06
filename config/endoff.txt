@@ -1,0 +1,1 @@
+--- Having thought through these considerations, please provide a detailed implementation showing how to [restate core request], including [key components needed].

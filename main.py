@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from routers.chat import router
 
 app = FastAPI()
 
@@ -19,6 +20,8 @@ class SPAStaticFiles(StaticFiles):
         if response.status_code == 404:
             response = await super().get_response(".", scope)
         return response
+    
+app.include_router(router, prefix="/api")
 
 app.mount("/", SPAStaticFiles(directory="frontend/dist", html=True), name="spa")
 

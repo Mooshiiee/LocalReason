@@ -2,22 +2,36 @@ import { useState } from 'react';
 import { sendPrompt } from './api/chat';
 
 const DEFAULT_BACKEND_URL = 'http://localhost:8000';
+const DEFAULT_MODEL = "llama3.2:3b";
+const RECOMMENDED_MODELS = [
+  "llama3.2:3b",
+  "mistralai/Mistral-7B-Instruct-v0.1",
+  "codellama/CodeLlama-7b-Instruct-hf"
+];
 
 function App() {
   const [prompt, setPrompt] = useState('');
   const [response, setResponse] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [backendUrl, setBackendUrl] = useState(DEFAULT_BACKEND_URL);
+  const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null); // Clear previous errors
-    const { response, error } = await sendPrompt(prompt, backendUrl);
-    if (error) {
-      setError(error);
-      setResponse('');
-    } else {
-      setResponse(response || '');
+    setError(null);
+    setResponse(''); // Clear previous response
+    setIsLoading(true);
+
+    try {
+      const { response, error } = await sendPrompt(prompt, backendUrl, selectedModel);
+      if (error) {
+        setError(error);
+      } else {
+        setResponse(response || '');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -51,6 +65,24 @@ function App() {
         Local Reason
       </h1>
 
+      <div className="w-3/4 flex items-center justify-between mb-4">
+        <label htmlFor="model-select" className="mr-2 font-medium text-black">
+          Model:
+        </label>
+        <select
+          id="model-select"
+          className="p-2 border border-black text-black flex-grow bg-white"
+          value={selectedModel}
+          onChange={(e) => setSelectedModel(e.target.value)}
+        >
+          {RECOMMENDED_MODELS.map((model) => (
+            <option key={model} value={model}>
+              {model}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <form onSubmit={handleSubmit} className="w-3/4">
         <textarea
           className="w-full h-64 p-4 border border-black resize-none text-black border bg-white"
@@ -74,6 +106,11 @@ function App() {
       </form>
 
       <div className='w-3/4 pb-8'>
+        {isLoading && (
+          <div className="mt-4">
+            <h2 className="text-2xl font-bold mb-2 text-black animate-pulse">Loading...</h2>
+          </div>
+        )}
         {error && (
           <div className="mt-4">
             <h2 className="text-2xl font-bold mb-2 text-red-600">Error:</h2>
@@ -84,8 +121,17 @@ function App() {
         )}
         {response && (
           <div className="mt-4">
-            <h2 className="text-2xl font-bold mb-2 text-black">Response:</h2>
-            <div className="whitespace-pre-wrap p-4 border border-black bg-white text-black">
+            <div className="flex flex-row items-center justify-between m-1">
+              <h2 className="text-2xl font-bold mb-2 text-black">Response:</h2>
+              <button
+                onClick={() => {navigator.clipboard.writeText(response)}}
+                type='button'
+                className='bg-purple-600 text-white px-4 py-2 hover:bg-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-opacity-50'
+              >
+                Copy
+              </button>
+            </div>
+            <div className="whitespace-pre-wrap border p-4 border-black bg-white text-black">
               {response}
             </div>
           </div>

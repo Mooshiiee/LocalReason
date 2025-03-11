@@ -6,6 +6,7 @@ import os
 router = APIRouter()
 
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+DEFAULT_MODEL = "llama3.2:3b"
 
 async def read_config_files():
     try:
@@ -22,6 +23,7 @@ async def chat_handler(request: Request):
     try:
         data = await request.json()
         user_prompt = data.get("prompt")
+        selected_model = data.get("model", DEFAULT_MODEL)
         if not user_prompt:
             raise HTTPException(status_code=400, detail="Prompt is required.")
 
@@ -35,7 +37,7 @@ async def chat_handler(request: Request):
                 f"{OLLAMA_HOST}/api/generate",
                 json={
                     "prompt": full_prompt,
-                    "model": "llama3.2:3b",
+                    "model": selected_model,
                     "stream": False,
                       "options": {
                         "temperature": 0.85,

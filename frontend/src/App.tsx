@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { sendPrompt } from './api/chat';
+import { LibraryToggle } from './components/LibraryToggle';
 
 const DEFAULT_BACKEND_URL = 'http://localhost:8000';
 const DEFAULT_MODEL = "llama3.2:3b";
@@ -34,6 +35,16 @@ function App() {
       setIsLoading(false);
     }
   };
+
+  const fetchLibraries = async () => {
+    const response = await fetch(`${backendUrl}/db/libraries`);
+    const data = await response.json();
+    console.log(data);
+  }
+
+  useEffect(() => {
+    fetchLibraries();
+  }, [])
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-gradient-to-tr from-green-200 from-0% to-violet-300 to-100%">
@@ -82,6 +93,8 @@ function App() {
           ))}
         </select>
       </div>
+
+      <LibraryToggle />
 
       <form onSubmit={handleSubmit} className="w-3/4">
         <textarea

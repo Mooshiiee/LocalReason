@@ -3,7 +3,7 @@ import httpx
 import json
 import os
 
-router = APIRouter()
+chat_router = APIRouter()
 
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 DEFAULT_MODEL = "llama3.2:3b"
@@ -18,7 +18,7 @@ async def read_config_files():
     except FileNotFoundError:
         raise HTTPException(status_code=500, detail="Configuration files not found.")
 
-@router.post("/chat")
+@chat_router.post("/chat")
 async def chat_handler(request: Request):
     try:
         data = await request.json()

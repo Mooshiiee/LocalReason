@@ -23,6 +23,15 @@ def get_libraries(
     libraries = session.exec(select(Library)).all()
     return libraries
 
+# for single library
+@db_router.get('/get-libary/{library_id}')
+def get_library(library_id: int, session: SessionDep):
+    library = session.get(Library, library_id)
+    if not library:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Library not found")
+    return library
+
+
 @db_router.delete('/libraries/{library_id}', status_code=status.HTTP_204_NO_CONTENT)
 def delete_library(library_id: int, session: SessionDep):
     library = session.get(Library, library_id)

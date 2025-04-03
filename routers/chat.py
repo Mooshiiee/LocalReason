@@ -24,11 +24,13 @@ async def chat_handler(request: Request):
         data = await request.json()
         user_prompt = data.get("prompt")
         selected_model = data.get("model", DEFAULT_MODEL)
+        # selected_libraries = data.get("selected_libraries", [])
         if not user_prompt:
             raise HTTPException(status_code=400, detail="Prompt is required.")
 
         preprompt, endoff = await read_config_files()
         full_prompt = preprompt.replace("[INSERT QUESTION]", user_prompt)
+        
         # endoff logic (currently unused)
         # full_prompt += endoff
 
@@ -57,3 +59,5 @@ async def chat_handler(request: Request):
         raise HTTPException(status_code=500, detail=f"Ollama API error: {e}")
     except json.JSONDecodeError as e:
         raise HTTPException(status_code=500, detail="Invalid JSON response from Ollama API")
+
+

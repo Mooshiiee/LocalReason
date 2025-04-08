@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
+import { Routes, Route } from 'react-router-dom'; // Import routing components
 import { sendPrompt } from './api/chat';
 import { LibraryToggle } from './components/LibraryToggle';
+import { LibraryFormPage } from './pages/LibraryFormPage'; // Import the actual page component
 
 const DEFAULT_BACKEND_URL = 'http://localhost:8000';
 const DEFAULT_MODEL = "llama3.2:3b";
@@ -36,19 +38,22 @@ function App() {
     }
   };
 
+  // This fetch seems unrelated to the main prompt/response logic,
+  // consider if it's still needed or should be moved/removed.
   const fetchLibraries = async () => {
     const response = await fetch(`${backendUrl}/db/libraries`);
     const data = await response.json();
-    console.log(data);
+    console.log(data); // Logs library data to console on initial load
   }
 
   useEffect(() => {
     fetchLibraries();
-  }, [])
+  }, []); // Empty dependency array means this runs once on mount
 
-  return (
-    <div className="flex flex-col items-center min-h-screen bg-gradient-to-tr from-green-200 from-0% to-violet-300 to-100%">
-
+  // Component for the main page content (rendered at '/')
+  const MainPage = () => (
+    <>
+      {/* Backend URL Input */}
       <div className="w-3/4 flex items-center justify-between mb-4 pt-4">
         <label htmlFor="backend-url" className="mr-2 font-medium text-black">
           Backend URL:
@@ -72,10 +77,7 @@ function App() {
         </button>
       </div>
 
-      <h1 className="text-4xl text-black font-bold text-center pt-12 pb-6">
-        Local Reason
-      </h1>
-
+      {/* Model Selection */}
       <div className="w-3/4 flex items-center justify-between mb-4">
         <label htmlFor="model-select" className="mr-2 font-medium text-black">
           Model:
@@ -94,8 +96,10 @@ function App() {
         </select>
       </div>
 
+      {/* Library Toggle Component */}
       <LibraryToggle />
 
+      {/* Prompt Form */}
       <form onSubmit={handleSubmit} className="w-3/4">
         <textarea
           className="w-full h-64 p-4 border border-black resize-none text-black border bg-white"
@@ -103,7 +107,6 @@ function App() {
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
         />
-
         <button
           type="submit"
           className="group relative inline-block text-sm font-medium text-indigo-600 focus:ring-1 focus:outline-hidden my-4"
@@ -111,13 +114,13 @@ function App() {
           <span
             className="absolute inset-0 translate-x-0 translate-y-0 bg-indigo-600 transition-transform group-hover:translate-x-0.5 group-hover:translate-y-0.5"
           ></span>
-
           <span className="relative block border border-current bg-white px-8 py-3">
             Submit
           </span>
         </button>
       </form>
 
+      {/* Response/Error Display */}
       <div className='w-3/4 pb-8'>
         {isLoading && (
           <div className="mt-4">
@@ -150,7 +153,24 @@ function App() {
           </div>
         )}
       </div>
+    </>
+  );
 
+  // Main App return statement with routing
+  return (
+    <div className="flex flex-col items-center min-h-screen bg-gradient-to-tr from-green-200 from-0% to-violet-300 to-100%">
+      {/* Static Header */}
+      <h1 className="text-4xl text-black font-bold text-center pt-12 pb-6">
+        Local Reason
+      </h1>
+
+      {/* Define application routes */}
+      <Routes>
+        <Route path="/" element={<MainPage />} />
+        <Route path="/library/new" element={<LibraryFormPage />} /> {/* Use actual component */}
+        <Route path="/library/edit/:id" element={<LibraryFormPage />} /> {/* Use actual component */}
+        {/* Add other routes here if needed */}
+      </Routes>
     </div>
   );
 }

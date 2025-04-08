@@ -1,4 +1,3 @@
-import React, { useState } from "react"; // Removed useEffect, useCallback
 import { useLibrary } from "../context/LibraryContext"; // Import the context hook
 import {
   ToggleGroup,
@@ -6,7 +5,8 @@ import {
 } from "./ui/toggle-group";
 import { Button } from "./ui/button"; // Added
 // Removed unused UI imports: Input, Label, Textarea, Sheet components, Checkbox
-import { LibraryFormSheet } from "./LibraryFormSheet"; // Import the new component
+// Removed import for LibraryFormSheet
+import { Link } from "react-router-dom"; // Import Link for navigation
 
 export function LibraryToggle() {
   // Use context for library data and selection
@@ -18,12 +18,7 @@ export function LibraryToggle() {
     // Removed getLibraryById, addLibrary, updateLibrary as they are used in LibraryFormSheet
   } = useLibrary();
 
-  // Local state for controlling the Sheet (open/close) and tracking the ID being edited
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [editingLibraryId, setEditingLibraryId] = useState<number | null>(null);
-
-  // Removed local state and effects related to form data (NewLibraryData interface, newLibraryData, isContent, loadLibraryForEditing, useEffect)
-  // Removed handlers related to form (handleInputChange, handleIsContentToggle, handleAddOrUpdateLibrary)
+  // Removed state for Sheet control (isSheetOpen, editingLibraryId)
 
   // Handler for toggle group changes - uses context setter
   const handleValueChange = (value: string[]) => {
@@ -55,13 +50,10 @@ export function LibraryToggle() {
     <div className="p-4 space-y-4"> {/* Added space-y-4 */}
       {/* --- Action Buttons --- */}
       <div className="flex gap-2">
-        {/* Render the extracted Sheet component */}
-        <LibraryFormSheet
-          isSheetOpen={isSheetOpen}
-          setIsSheetOpen={setIsSheetOpen}
-          editingLibraryId={editingLibraryId}
-          setEditingLibraryId={setEditingLibraryId}
-        />
+        {/* Link to the Add New Library page */}
+        <Button asChild variant="outline">
+          <Link to="/library/new">Add Library</Link>
+        </Button>
         <Button
           variant="destructive"
           onClick={handleDeleteSelected}
@@ -88,16 +80,9 @@ export function LibraryToggle() {
             > 
               {library.name}
             </ToggleGroupItem>
-            {/* Edit button now sets the ID and opens the sheet */}
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => {
-                setEditingLibraryId(library.id);
-                setIsSheetOpen(true); // Open the sheet for editing
-              }}
-            >
-              Edit
+            {/* Link to the Edit Library page */}
+            <Button asChild variant="default" size="sm">
+              <Link to={`/library/edit/${library.id}`}>Edit</Link>
             </Button>
           </div>
         ))}

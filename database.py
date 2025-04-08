@@ -3,13 +3,28 @@ from typing import Annotated
 from fastapi import Depends
 from sqlmodel import Field, Session, SQLModel, create_engine, select # Added select
 
+# Removed the first, simpler duplicate Library definition
 
 class Library(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    name: str = Field()
-    content: str | None = Field()
+    name: str = Field(index=True)
+    description: str | None = Field(default=None)
+    content: str | None = Field(default=None)   # blob of text
+    file_path: str | None = Field(default=None) # local file path
+    content_type: str = Field(default="text")  # "text", "file", "url"
     url: str | None = Field(default=None)
-    isContent: bool = Field(default=True)
+
+# Model for updating libraries (all fields optional)
+class LibraryUpdate(SQLModel):
+    name: str | None = None
+    description: str | None = None
+    content: str | None = None
+    file_path: str | None = None
+    content_type: str | None = None
+    url: str | None = None
+    # Re-adding isContent based on frontend usage
+    isContent: bool | None = None
+
 
 sqlite_url = f"sqlite:///database.db"
 

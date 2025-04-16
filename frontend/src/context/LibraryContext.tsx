@@ -4,6 +4,7 @@ import React, { createContext, useState, useEffect, useContext, useCallback, Rea
 interface Library {
   id: number;
   name: string;
+  description: string;
   url: string;
   content: string;
   isContent: boolean;
@@ -12,9 +13,9 @@ interface Library {
 // Define the shape of the context data
 interface LibraryContextType {
   libraries: Library[];
-  selectedLibraries: string[];
+  selectedLibraries: number[];
   fetchLibraries: () => void;
-  setSelectedLibraries: React.Dispatch<React.SetStateAction<string[]>>;
+  setSelectedLibraries: React.Dispatch<React.SetStateAction<number[]>>;
   deleteLibrary: (id: number) => Promise<void>;
   addLibrary: (libraryData: Omit<Library, 'id'>) => Promise<void>;
   updateLibrary: (id: number, libraryData: Partial<Omit<Library, 'id'>>) => Promise<void>;
@@ -32,7 +33,7 @@ interface LibraryProviderProps {
 // Create the provider component
 export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children }) => {
   const [libraries, setLibraries] = useState<Library[]>([]);
-  const [selectedLibraries, setSelectedLibraries] = useState<string[]>([]);
+  const [selectedLibraries, setSelectedLibraries] = useState<number[]>([]);
   const API_BASE_URL = "http://localhost:8000/db/libraries";
 
   // Fetch libraries from the API
@@ -103,7 +104,7 @@ export const LibraryProvider: React.FC<LibraryProviderProps> = ({ children }) =>
       }
       // Optimistic update or refetch
       setLibraries(prev => prev.filter(lib => lib.id !== id));
-      setSelectedLibraries(prev => prev.filter(selId => selId !== String(id)));
+      setSelectedLibraries(prev => prev.filter(selId => selId !== id));
       // Optionally refetch to ensure consistency, though optimistic update is faster UI-wise
       // await fetchLibraries();
     } catch (error) {

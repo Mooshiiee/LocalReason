@@ -12,6 +12,7 @@ class Library(SQLModel, table=True):
     content: str | None = Field(default=None)   # blob of text
     file_path: str | None = Field(default=None) # local file path
     content_type: str = Field(default="text")  # "text", "file", "url"
+    isContent: bool = Field(default=True)
     url: str | None = Field(default=None)
 
 # Model for updating libraries (all fields optional)
@@ -22,6 +23,7 @@ class LibraryUpdate(SQLModel):
     file_path: str | None = None
     content_type: str | None = None
     url: str | None = None
+    isContent: bool = Field(default=True)
     # Re-adding isContent based on frontend usage
     isContent: bool | None = None
 
@@ -60,10 +62,25 @@ def create_db_and_tables():
         else:
             print("Database already contains data, skipping sample data insertion.")
 
-
 def get_session():
     with Session(engine) as session:
         yield session
+
+# takes in list of integers (IDs), returns list of text retrieved from SQLite
+def get_libraries(selected_libraries):
+    with Session(engine) as session:
+        statement = select(Library).where(Library.id.in_(selected_libraries))
+        libraries = session.exec(statement).all()
+        res = []
+        for library in libraries:
+            description = library.description or "No description"
+            content = library.content or "No content"
+            full = "## " + description + " \n" + " - content: " + content 
+            res.append(full)
+            print("Library Loaded: ", description)
+        print("Libraries have been returned")
+        return res
+    
 
 
 SessionDep = Annotated[Session, Depends(get_session)]

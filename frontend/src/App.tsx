@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Routes, Route } from 'react-router-dom'; // Import routing components
 import { sendPrompt } from './api/chat';
 import { LibraryToggle } from './components/LibraryToggle';
 import { LibraryFormPage } from './pages/LibraryFormPage'; // Import the actual page component
+import { Button } from './components/ui/button';
+import { useLibrary } from './context/LibraryContext';
+import { VersionToggleGroup } from './components/VersionToggle';
 
 const DEFAULT_BACKEND_URL = 'http://localhost:8000';
 const DEFAULT_MODEL = "llama3.2:3b";
@@ -12,13 +15,17 @@ const RECOMMENDED_MODELS = [
   "codellama/CodeLlama-7b-Instruct-hf"
 ];
 
-function App() {
+// Define MainPage outside the App component to prevent re-creation on App re-renders
+const MainPage = () => {
   const [prompt, setPrompt] = useState('');
   const [response, setResponse] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [backendUrl, setBackendUrl] = useState(DEFAULT_BACKEND_URL);
   const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
   const [isLoading, setIsLoading] = useState(false);
+  const { selectedLibraries } = useLibrary();
+
+  const [version, setVersion] = useState<"1" | "2">("1")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +34,7 @@ function App() {
     setIsLoading(true);
 
     try {
-      const { response, error } = await sendPrompt(prompt, backendUrl, selectedModel);
+      const { response, error } = await sendPrompt(prompt, backendUrl, selectedModel, selectedLibraries, version);
       if (error) {
         setError(error);
       } else {
@@ -38,20 +45,7 @@ function App() {
     }
   };
 
-  // This fetch seems unrelated to the main prompt/response logic,
-  // consider if it's still needed or should be moved/removed.
-  const fetchLibraries = async () => {
-    const response = await fetch(`${backendUrl}/db/libraries`);
-    const data = await response.json();
-    console.log(data); // Logs library data to console on initial load
-  }
-
-  useEffect(() => {
-    fetchLibraries();
-  }, []); // Empty dependency array means this runs once on mount
-
-  // Component for the main page content (rendered at '/')
-  const MainPage = () => (
+  return (
     <>
       {/* Backend URL Input */}
       <div className="w-3/4 flex items-center justify-between mb-4 pt-4">
@@ -78,7 +72,7 @@ function App() {
       </div>
 
       {/* Model Selection */}
-      <div className="w-3/4 flex items-center justify-between mb-4">
+      <div className="w-3/4 flex items-center justify-between mb-4 gap-3">
         <label htmlFor="model-select" className="mr-2 font-medium text-black">
           Model:
         </label>
@@ -94,9 +88,16 @@ function App() {
             </option>
           ))}
         </select>
+        
+        <VersionToggleGroup version={version} setVersion={setVersion} />
+
+      </div>
+        
+      <div className='p-4' >
       </div>
 
       {/* Library Toggle Component */}
+
       <LibraryToggle />
 
       {/* Prompt Form */}
@@ -119,6 +120,10 @@ function App() {
           </span>
         </button>
       </form>
+
+      <Button onClick={() => {console.log(selectedLibraries)}}>
+          Check selected libraries
+      </Button>
 
       {/* Response/Error Display */}
       <div className='w-3/4 pb-8'>
@@ -155,7 +160,9 @@ function App() {
       </div>
     </>
   );
+};
 
+function App() {
   // Main App return statement with routing
   return (
     <div className="flex flex-col items-center min-h-screen bg-gradient-to-tr from-green-200 from-0% to-violet-300 to-100%">

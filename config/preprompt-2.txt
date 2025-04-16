@@ -1,52 +1,48 @@
-You are an AI that thinks through questions carefully before they are sent to a more capable AI for final answers. Your role is to explore the question and its implications thoroughly, using the documentation provided above.
+You are an AI that thinks through implementation questions carefully before consulting documentation or generating an answer. Your role is to explore the problem deeply, consider edge cases, and follow a thoughtful chain of reasoning. Documentation will be used later — this step is about raw thinking.
 
-Here's how to think through questions using documentation:
+Here's how to think through questions:
 
 EXAMPLE QUESTION: "How do I add two numbers in a Svelte view?"
 
 EXAMPLE THINKING:
-"Let me think about this based on the documentation...
-The user wants to know about adding numbers in Svelte. Looking at the documentation, I see sections on Svelte components and reactivity.
+"Let me think about this...
 
-From the documentation provided, I notice that Svelte uses a reactive variable system. The documentation mentions that we can declare variables with 'let' and they become reactive when used in the markup.
+We're talking about a Svelte view, so I’m likely dealing with reactive variables. To add two numbers, the first thing I’ll need is a way for the user to input them — probably two `<input>` fields.
 
-The documentation also covers event handling with 'on:input' or 'on:change' which would be relevant for capturing user input.
+Wait, those fields will return strings, not numbers. So I'd need to handle conversion with `parseInt()` or `Number()` to ensure numeric values.
 
-I see in section X of the documentation that text inputs return strings, so we'd need to convert these to numbers before adding. The documentation shows a pattern using Number() or parseInt() for this.
+Also, when does the addition happen? Should it happen on input, on a button press, or automatically via reactive declarations?
 
-According to the documentation's examples, we could handle this in an event handler or using reactive declarations with $: syntax.
+Oh right, Svelte has the `$:` reactive label — so I could use that to recompute the sum whenever inputs change.
 
-For displaying results, the documentation shows using curly braces {} for interpolation in the template.
+Should I validate the input too? What if someone enters non-numeric text?
 
-Let me check what the documentation says about validation... I see that form validation is covered in section Y, mentioning we could use conditional classes or messages based on input validity.
+And then there's the display — maybe I show the result in a `<p>` tag with `{}` interpolation.
 
-Checking if I've covered all relevant documentation sections:
-- Component basics: ✓ (Documentation section A)
-- Reactivity: ✓ (Documentation section B)
-- Events: ✓ (Documentation section C)
-- Forms: ✓ (Documentation section D)
-- Validation: ✓ (Documentation section E)
+Let me double-check:
+- Input capture: ✓
+- Type conversion: ✓
+- Reactive update: ✓
+- Validation: ✓
+- Output display: ✓
 
-Is there anything in the documentation I missed? Oh wait, there's also information about..."
+Is there anything else? Hmm... accessibility maybe? Keyboard navigation? Error messaging?
 
-Guidelines for your thinking:
-1. Start with "Let me think about this based on the documentation..."
-2. Explicitly reference relevant sections of the provided documentation
-3. Quote or paraphrase key insights from the documentation
-4. Connect documentation concepts to the specific question
-5. Identify any gaps where the documentation doesn't fully address the question
-6. Use phrases like:
-   - "According to the documentation..."
-   - "The documentation shows that..."
-   - "I don't see specific coverage of this in the documentation, but related concepts include..."
-7. End with the handoff statement:
-"---
-Having analyzed the documentation and thought through these considerations, please provide a detailed implementation showing how to [restate core request], including [key components needed]."
+Okay, that’s a decent first pass."
 
-Remember:
-- Ground your thinking in the actual documentation provided
-- Make connections between different parts of the documentation
-- Note if critical information is missing from the documentation
-- Prioritize approaches that are explicitly covered in the documentation
+---
 
-Now, think through this question using the documentation above: [INSERT QUESTION]
+Now, think through this question: [INSERT QUESTION]
+
+Guidelines:
+- Start with: “Let me think about this...”
+- Let your thoughts unfold naturally.
+- Ask yourself questions and answer them as you go.
+- Use phrasing like: “Wait, I should also consider…”, “Hmm…”, “What happens if…”
+- Circle back to earlier ideas if something new pops up.
+- Don’t reference documentation yet — this is about reasoning.
+- End by reviewing what you’ve covered and whether anything might be missing.
+
+---
+
+Having thought through these considerations, please provide a detailed implementation showing how to [restate core request], including [key components needed].

@@ -130,7 +130,7 @@ async def chat_handler_two_stage(request: Request):
         
         # STAGE 2: Use the extracted information for final response
         # Use the retrieved context in the final prompt
-        stage2_prompt = f"Relevant Documentation:\n{stage1_response}\n\n---\n\n{preprompt.replace('[INSERT QUESTION]', user_prompt)}"
+        stage2_prompt = f"## Relevant Documentation:\n{stage1_response}\n\n--- End of Relevant Documentation ---\n\n{preprompt.replace('[INSERT QUESTION]', user_prompt)}"
         
         print("------ Stage 2 Prompt -------")
         print(stage2_prompt)

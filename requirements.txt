@@ -1,0 +1,8 @@
+fastapi
+sqlmodel
+uvicorn
+httpx
+langchain
+sentence-transformers
+chromadb-client
+pydantic-settings

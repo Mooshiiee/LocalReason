@@ -1,8 +1,11 @@
 from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request
 import httpx
 import json
 import os
-from database import get_libraries
+# Removed: from database import get_libraries
+# Import the RAG retrieval function
+from rag_service import retrieve_relevant_chunks
 
 chat_router = APIRouter()
 
@@ -53,20 +56,22 @@ async def chat_handler(request: Request):
         if not user_prompt:
             raise HTTPException(status_code=400, detail="Prompt is required.")
         
-        # get the libraries
-        selected_libraries = data.get("selected_libraries", [])
-        content_array = get_libraries(selected_libraries)
-        library_text = "\n---\n".join(content_array)
-    
-        # construct prompt
-        preprompt, endoff, retrival = await read_config_files() 
-        # not using endoff statement
-        
-        #full_prompt = preprompt.replace("[INSERT QUESTION]", user_prompt)
-        full_prompt = f"Relevant Documentation:\n{library_text}\n\n---\n\n{preprompt.replace('[INSERT QUESTION]', user_prompt)}"
+        # Get selected libraries
+        selected_libraries = data.get("selected_libraries", []) # Expecting a list of integers (IDs)
 
-        # endoff logic (currently unused)
-        # full_prompt += endoff
+        # Retrieve relevant chunks using RAG
+        retrieved_docs = retrieve_relevant_chunks(user_prompt, selected_libraries)
+        retrieved_context = "\n\n---\n\n".join(retrieved_docs) # Join chunks with separators
+
+        # Construct prompt using retrieved context
+        preprompt, endoff, _ = await read_config_files() # retrieval_prompt no longer needed here
+
+        if not retrieved_context:
+            retrieved_context = "No relevant documentation found in the selected libraries."
+
+        full_prompt = f"Relevant Documentation:\n{retrieved_context}\n\n---\n\n{preprompt.replace('[INSERT QUESTION]', user_prompt)}"
+
+        # endoff logic remains unused
         
         print("------full prompt -------")
         print(full_prompt)
@@ -95,57 +100,8 @@ async def chat_handler(request: Request):
         raise HTTPException(status_code=500, detail=f"Ollama API error: {e}")
     except json.JSONDecodeError as e:
         raise HTTPException(status_code=500, detail="Invalid JSON response from Ollama API")
+    except Exception as e: # Catch broader exceptions
+        print(f"Unhandled error in chat handler: {e}") # Log the error
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
 
-@chat_router.post("/chat-ver2")
-async def chat_handler_two_stage(request: Request):
-    try:
-        data = await request.json()
-        user_prompt = data.get("prompt")
-        selected_model = data.get("model", DEFAULT_MODEL)
-        
-        if not user_prompt:
-            raise HTTPException(status_code=400, detail="Prompt is required.")
-        
-        # Get the libraries
-        selected_libraries = data.get("selected_libraries", [])
-        content_array = get_libraries(selected_libraries)
-        library_text = "\n---\n".join(content_array)
-        
-        # Read config files
-        preprompt, endoff, retrieval_prompt = await read_config_files()
-        
-        # STAGE 1: Analysis and extraction of relevant documentation
-        # Replace placeholders in the retrieval prompt
-        stage1_prompt = retrieval_prompt.replace("[INSERT QUESTION]", user_prompt).replace("[DOCUMENTATION_TEXT]", library_text)
-        
-        
-        print("------ Stage 1 Prompt -------")
-        print(stage1_prompt)
-
-        # First LLM call to analyze and extract relevant information
-        stage1_response = await generate_llm_response(stage1_prompt, selected_model)
-        
-        print("------ Stage 1 Response -------")
-        print(stage1_response)
-        
-        # STAGE 2: Use the extracted information for final response
-        # Use the retrieved context in the final prompt
-        stage2_prompt = f"## Relevant Documentation:\n{stage1_response}\n\n--- End of Relevant Documentation ---\n\n{preprompt.replace('[INSERT QUESTION]', user_prompt)}"
-        
-        print("------ Stage 2 Prompt -------")
-        print(stage2_prompt)
-        
-        # Second LLM call to generate the final answer
-        stage2_response = await generate_llm_response(stage2_prompt, selected_model)
-        
-        return {
-            "response": stage2_response,
-            "analysis": stage1_response  # Optionally return the first stage analysis
-        }
-        
-    except httpx.HTTPError as e:
-        raise HTTPException(status_code=500, detail=f"Ollama API error: {e}")
-    except json.JSONDecodeError as e:
-        raise HTTPException(status_code=500, detail="Invalid JSON response from Ollama API")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+# Removed the /chat-ver2 endpoint and chat_handler_two_stage function

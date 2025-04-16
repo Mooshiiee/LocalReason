@@ -66,21 +66,7 @@ def get_session():
     with Session(engine) as session:
         yield session
 
-# takes in list of integers (IDs), returns list of text retrieved from SQLite
-def get_libraries(selected_libraries):
-    with Session(engine) as session:
-        statement = select(Library).where(Library.id.in_(selected_libraries))
-        libraries = session.exec(statement).all()
-        res = []
-        for library in libraries:
-            description = library.description or "No description"
-            content = library.content or "No content"
-            full = "## " + description + " \n" + " - content: " + content 
-            res.append(full)
-            print("Library Loaded: ", description)
-        print("Libraries have been returned")
-        return res
-    
+# Removed get_libraries function as it's replaced by RAG retrieval
 
 
 SessionDep = Annotated[Session, Depends(get_session)]

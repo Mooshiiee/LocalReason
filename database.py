@@ -62,6 +62,22 @@ def create_db_and_tables():
         else:
             print("Database already contains data, skipping sample data insertion.")
 
+# takes in list of integers (IDs), returns list of text retrieved from SQLite
+def get_libraries(selected_libraries):
+    with Session(engine) as session:
+        statement = select(Library).where(Library.id.in_(selected_libraries))
+        libraries = session.exec(statement).all()
+        res = []
+        for library in libraries:
+            description = library.description or "No description"
+            content = library.content or "No content"
+            full = "## " + description + " \n" + " - content: " + content 
+            res.append(full)
+            print("Library Loaded: ", description)
+        print("Libraries have been returned")
+        return res
+    
+
 def get_session():
     with Session(engine) as session:
         yield session

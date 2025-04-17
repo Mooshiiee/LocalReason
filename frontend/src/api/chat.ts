@@ -10,19 +10,26 @@ interface AxiosError extends Error {
 }
 export const sendPrompt = async (prompt: string, backendUrl: string, model: string, selected_libraries: number[], ver: VersionType) => {
   try {
-    let chat_version: string;
+    let chat_endpoint: string;
 
-    if (!ver) {
-      chat_version = 'api/chat';
-    } else if (ver === "1") {
-      chat_version = 'api/chat';
-    } else if (ver === "2") {
-      chat_version = 'api/chat-ver2';
-    } else {
-      chat_version = `api/chat-ver${ver}`; // or set to a default/fallback
+    // Map VersionType to the correct API endpoint
+    switch (ver) {
+      case "1":
+        chat_endpoint = 'api/chat-pipeline'; // Version 1 is Pipeline
+        break;
+      case "2":
+        chat_endpoint = 'api/chat-rag'; // Version 2 is RAG
+        break;
+      case "3":
+        chat_endpoint = 'api/chat-rag-2'; // Version 3 is RAG-2
+        break;
+      default:
+        // Default to RAG if ver is somehow invalid (shouldn't happen with TypeScript)
+        console.warn(`Invalid version type received: ${ver}. Defaulting to RAG.`);
+        chat_endpoint = 'api/chat-rag'; 
     }
 
-    const response = await axios.post(`${backendUrl}/${chat_version}`, { prompt, model, selected_libraries });
+    const response = await axios.post(`${backendUrl}/${chat_endpoint}`, { prompt, model, selected_libraries });
     return { response: response.data.response, error: null };
   } catch (error: unknown) {
     if (error instanceof Error) {

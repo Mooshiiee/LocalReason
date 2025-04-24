@@ -59,8 +59,15 @@ LocalReason is a local-first AI reasoning engine that performs initial Chain-of-
 
 
  ## Start the Application Server:**
-    *   From the root directory (`LocalReason/`):
+   ** Steps **
+    *   From the root directory (LocalReason/):
         ```bash
+        cd frontend
+        npm i
+        npm run build
+        -- IF ShadCN ERROR : 
+        npx shadcn@latest add utils
+        cd .. 
         fastapi dev main.py
         ```
     *   Connects to Ollama API via default port 

@@ -44,7 +44,7 @@ export function LibraryToggle() {
 
 
   return (
-    <div className="w-3/4 p-4 space-y-4 bg-white border-1 border-black mb-4"> {/* Added space-y-4 */}
+    <div className="w-3/4 p-4 space-y-4 bg-input border-1 border-border mb-4"> {/* Added space-y-4 */}
       <div className="flex gap-2">
         <Button asChild variant="outline">
           <Link to="/library/new">Add Library</Link>
@@ -64,14 +64,14 @@ export function LibraryToggle() {
         variant="outline"
         value={selectedLibraries.map(id => String(id))} 
         onValueChange={handleValueChange}
-        className="flex flex-wrap gap-2 space-x-2 group"
+        className="flex flex-wrap gap-2 space-x-2 group "
       >
         {libraries.map((library) => (
           <div key={library.id} className="items-center">
             <ToggleGroupItem
               value={String(library.id)}
               aria-label={`Toggle ${library.name}`}
-              className="data-[state=on]:bg-amber-200"
+              className="data-[state=on]:bg-amber-200 data-[state=on]:text-black border-2"
             > 
               {library.name}
               <Button asChild variant="default" size="sm">

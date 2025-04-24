@@ -4,7 +4,7 @@ Here's how to think through questions:
 
 EXAMPLE QUESTION: "How do I add two numbers in a Svelte view?"
 
-EXAMPLE THINKING:
+EXAMPLE THINKING (try not to use this example or the svelte library unless mentioned in the question):
 "Let me think about this...
 
 We're talking about a Svelte view, so I’m likely dealing with reactive variables. To add two numbers, the first thing I’ll need is a way for the user to input them — probably two `<input>` fields.
@@ -42,7 +42,3 @@ Guidelines:
 - Circle back to earlier ideas if something new pops up.
 - Don’t reference documentation yet — this is about reasoning.
 - End by reviewing what you’ve covered and whether anything might be missing.
-
----
-
-Having thought through these considerations, please provide a detailed implementation showing how to [restate core request], including [key components needed].

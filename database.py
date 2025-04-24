@@ -37,6 +37,7 @@ engine = create_engine(sqlite_url, connect_args=connect_args, echo=True)
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine) # Creates tables if they don't exist
 
+    """     
     # Insert sample data only if the table is empty
     with Session(engine) as session:
         # Check if any libraries already exist
@@ -50,21 +51,11 @@ def create_db_and_tables():
                 content="FastAPI framework, high performance, easy to learn, fast to code, ready for production",
             url="https://fastapi.tiangolo.com/",
             )
-            library2 = Library(
-                name="SQLModel",
-                content="SQLModel, databases in Python, designed for simplicity, compatibility, and robustness.",
-                url="https://sqlmodel.tiangolo.com/",
-            )
             session.add(library1)
-            session.add(library2)
             session.commit()
             print("Sample data added.")
         else:
-            print("Database already contains data, skipping sample data insertion.")
-
-def get_session():
-    with Session(engine) as session:
-        yield session
+            print("Database already contains data, skipping sample data insertion.") """
 
 # takes in list of integers (IDs), returns list of text retrieved from SQLite
 def get_libraries(selected_libraries):
@@ -81,6 +72,12 @@ def get_libraries(selected_libraries):
         print("Libraries have been returned")
         return res
     
+
+def get_session():
+    with Session(engine) as session:
+        yield session
+
+# Removed get_libraries function as it's replaced by RAG retrieval
 
 
 SessionDep = Annotated[Session, Depends(get_session)]

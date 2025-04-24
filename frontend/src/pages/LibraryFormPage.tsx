@@ -29,7 +29,8 @@ export function LibraryFormPage() {
     content: "",
   });
   const [isContent, setIsContent] = useState<boolean>(true);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false); // For loading initial data
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false); // For form submission
   const [error, setError] = useState<string | null>(null);
 
   const loadLibraryForEditing = useCallback(async (libraryId: number) => {
@@ -79,6 +80,7 @@ export function LibraryFormPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsSubmitting(true); // Start submitting state
     const libraryDataToSave = {
       ...newLibraryData,
       isContent: isContent,
@@ -100,6 +102,8 @@ export function LibraryFormPage() {
     } catch (err) {
       console.error("Error saving library:", err);
       setError("Failed to save library. Please try again.");
+    } finally {
+      setIsSubmitting(false); // End submitting state regardless of outcome
     }
   };
 
@@ -107,29 +111,35 @@ export function LibraryFormPage() {
     return <div className="p-4">Loading library data...</div>;
   }
 
+  // Use standard Tailwind for error text
   if (error && isEditing) {
-    return <div className="p-4 text-red-600">Error: {error}</div>;
+    return <div className="p-4 text-red-600">Error: {error}</div>; // Keep standard Tailwind red
   }
 
+  // No need for errorTextColor variable anymore
+
   return (
-    <div className="p-4 w-full max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4 text-black">
+    // Use theme background/foreground
+    <div className="p-4 w-full max-w-2xl mx-auto bg-background text-foreground">
+      <h2 className="text-2xl font-bold mb-4 text-foreground"> {/* text-black -> text-foreground */}
         {isEditing ? "Edit Library" : "Add New Library"}
       </h2>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4 border border-gray-300 rounded bg-white shadow">
+      {/* Use theme card/border */}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4 border border-border rounded bg-card shadow"> {/* border-gray-300 -> border-border, bg-white -> bg-card */}
 
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={() => navigate("/")}>
+          {/* Removed explicit bg-black, rely on variant */}
+          <Button type="button" variant="outline" onClick={() => navigate("/")} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button type="submit">
-            {isEditing ? "Save Changes" : "Add Library"}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : (isEditing ? "Save Changes" : "Add Library")}
           </Button>
         </div>
 
         {/* Name Input */}
         <div className="flex flex-col gap-2 w-1/2">
-          <Label htmlFor="name" className="text-black">
+          <Label htmlFor="name" className="text-foreground"> {/* text-black -> text-foreground */}
             Name
           </Label>
           <Input
@@ -137,12 +147,14 @@ export function LibraryFormPage() {
             name="name"
             value={newLibraryData.name}
             onChange={handleInputChange}
+            className="text-foreground bg-input" /* text-black -> text-foreground, bg-white -> bg-input */
             required
+            disabled={isSubmitting} // Disable input during submission
           />
         </div>
 
         <div className="flex flex-col gap-2">
-            <Label htmlFor="description" className="text-black">
+            <Label htmlFor="description" className="text-foreground"> {/* text-black -> text-foreground */}
               Description (Important for LLM Context)
             </Label>
             <Input
@@ -150,12 +162,15 @@ export function LibraryFormPage() {
               name="description"
               value={newLibraryData.description || ''}
               onChange={handleInputChange}
+              // Add standard input styling
+              className="text-foreground bg-input border border-border rounded p-2"
+              disabled={isSubmitting} // Disable input during submission
             />
           </div>
 
         {/* URL/Content Toggle */}
         <div className="flex items-center gap-2">
-          <Label htmlFor="isContent" className="text-black">
+          <Label htmlFor="isContent" className="text-foreground"> {/* text-black -> text-foreground */}
             Use URL instead?
           </Label>
           <Checkbox
@@ -164,13 +179,14 @@ export function LibraryFormPage() {
             checked={!isContent}
             onCheckedChange={handleIsContentToggle}
             className="w-6 h-6"
+            disabled={isSubmitting} // Disable checkbox during submission
           />
         </div>
 
         {/* Conditional Fields */}
         {isContent ? (
           <div className="flex flex-col gap-2">
-            <Label htmlFor="content" className="text-black">
+            <Label htmlFor="content" className="text-foreground"> {/* text-black -> text-foreground */}
               Content
             </Label>
             <Textarea
@@ -178,11 +194,13 @@ export function LibraryFormPage() {
               name="content"
               value={newLibraryData.content || ''}
               onChange={handleInputChange}
+              className="text-foreground bg-input" /* Added theme classes */
+              disabled={isSubmitting} // Disable textarea during submission
             />
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            <Label htmlFor="url" className="text-black">
+            <Label htmlFor="url" className="text-foreground"> {/* text-black -> text-foreground */}
               URL
             </Label>
             <Input
@@ -190,24 +208,29 @@ export function LibraryFormPage() {
               name="url"
               value={newLibraryData.url || ''}
               onChange={handleInputChange}
+              className="text-foreground bg-input" /* Added theme classes */
+              disabled={isSubmitting} // Disable input during submission
             />
           </div>
         )}
 
         {/* Error Display */}
         {error && !isEditing && (
+           // Use standard Tailwind red
           <p className="text-red-600">{error}</p>
         )}
 
-        {/* Action Buttons */}
+
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={() => navigate("/")}>
+          {/* Removed explicit bg-black, rely on variant */}
+          <Button type="button" variant="outline" onClick={() => navigate("/")} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button type="submit">
-            {isEditing ? "Save Changes" : "Add Library"}
+          <Button type="submit" disabled={isSubmitting}>
+             {isSubmitting ? "Saving..." : (isEditing ? "Save Changes" : "Add Library")}
           </Button>
         </div>
+        
       </form>
     </div>
   );

@@ -61,15 +61,15 @@ LocalReason is a local-first AI reasoning engine that performs initial Chain-of-
  ## Start the Application Server:**
    ** Steps **
     *   From the root directory (LocalReason/):
-        ```bash
-        cd frontend
-        npm i
-        npm run build
-        -- IF ShadCN ERROR : 
-        npx shadcn@latest add utils
-        cd .. 
-        fastapi dev main.py
-        ```
+  ```bash
+  cd frontend
+  npm i
+  npm run build
+  -- IF ShadCN ERROR : 
+  npx shadcn@latest add utils
+  cd .. 
+  fastapi dev main.py
+  ```
     *   Connects to Ollama API via default port 
     *   The backend API will typically be available at `http://127.0.0.1:8000`.
 

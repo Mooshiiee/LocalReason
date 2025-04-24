@@ -12,7 +12,7 @@ CHUNK_OVERLAP = 150 # Overlap between chunks
 
 # --- Initialization ---
 try:
-    # Initialize ChromaDB client (persistent)
+    # Initialize ChromaDB client (persistent) - Reverting to this simpler method
     client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
 
     # Initialize Sentence Transformer embedding function
@@ -38,9 +38,13 @@ try:
     print(f"ChromaDB collection '{COLLECTION_NAME}' initialized successfully at {CHROMA_DB_PATH}.")
 
 except Exception as e:
-    print(f"Error initializing RAG service: {e}")
-    # Depending on the application, you might want to raise this exception
-    # or handle it gracefully (e.g., disable RAG features)
+    print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    print(f"!!! CRITICAL ERROR INITIALIZING RAG SERVICE !!!")
+    print(f"!!! Exception Type: {type(e).__name__}")
+    print(f"!!! Exception Details: {e}")
+    print(f"!!! RAG features will be disabled.")
+    print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    # Set components to None to prevent further errors and indicate failure
     client = None
     collection = None
     text_splitter = None
@@ -112,7 +116,7 @@ def delete_library(library_id: int):
         print(f"Error deleting chunks from ChromaDB for library ID {library_id}: {e}")
 
 
-def retrieve_relevant_chunks(query: str, selected_library_ids: list[int], k: int = 5) -> list[str]:
+def retrieve_relevant_chunks(query: str, selected_library_ids: list[int], k: int = 10) -> list[str]: # Increased default k to 10
     """Retrieves the top k relevant chunks for a query, filtered by selected libraries."""
     if not collection:
         print("RAG service not initialized. Returning empty list.")
@@ -145,4 +149,93 @@ def retrieve_relevant_chunks(query: str, selected_library_ids: list[int], k: int
 
     except Exception as e:
         print(f"Error querying ChromaDB: {e}")
+        return []
+
+
+# New function to retrieve surrounding chunks
+def retrieve_relevant_chunks_surrounding(query: str, selected_library_ids: list[int], k: int = 10) -> list[str]:
+    """
+    Retrieves the top k relevant chunks and their immediate surrounding chunks
+    (previous and next based on index) for a query, filtered by selected libraries.
+    """
+    if not collection:
+        print("RAG service not initialized. Returning empty list.")
+        return []
+
+    if not selected_library_ids:
+        print("No libraries selected for retrieval. Returning empty list.")
+        return []
+
+    print(f"Retrieving top {k} chunks and their neighbours for query, filtered by library IDs: {selected_library_ids}")
+
+    # Construct the 'where' filter for ChromaDB
+    where_filter = {"library_id": {"$in": selected_library_ids}}
+
+    try:
+        # Step 1: Query for Top K with Metadata
+        initial_results = collection.query(
+            query_texts=[query],
+            n_results=k,
+            where=where_filter,
+            include=['metadatas'] # Only need metadata initially to find neighbours
+        )
+
+        # Step 2: Identify Target Chunks (Original + Surrounding)
+        target_ids_to_fetch = set()
+        initial_results_ids = initial_results.get('ids', [[]])[0]
+        initial_results_metadatas = initial_results.get('metadatas', [[]])[0]
+
+        if not initial_results_ids or not initial_results_metadatas:
+             print("Initial query returned no results.")
+             return []
+
+        print(f"Retrieved {len(initial_results_ids)} initial chunks. Identifying surrounding chunks...")
+
+        for i, chunk_id in enumerate(initial_results_ids):
+            metadata = initial_results_metadatas[i]
+            if not metadata:
+                print(f"Warning: Missing metadata for chunk ID {chunk_id}. Skipping surrounding chunk fetch for this.")
+                target_ids_to_fetch.add(chunk_id)
+                continue
+
+            library_id = metadata.get('library_id')
+            chunk_index = metadata.get('chunk_index')
+
+            if library_id is None or chunk_index is None:
+                print(f"Warning: Incomplete metadata ({metadata}) for chunk ID {chunk_id}. Skipping surrounding chunk fetch.")
+                target_ids_to_fetch.add(chunk_id)
+                continue
+
+            # Add the initially retrieved chunk ID
+            target_ids_to_fetch.add(chunk_id)
+
+            # Add preceding chunk ID if index > 0
+            if chunk_index > 0:
+                prev_chunk_id = f"lib_{library_id}_chunk_{chunk_index - 1}"
+                target_ids_to_fetch.add(prev_chunk_id)
+
+            # Add succeeding chunk ID optimistically
+            next_chunk_id = f"lib_{library_id}_chunk_{chunk_index + 1}"
+            target_ids_to_fetch.add(next_chunk_id)
+
+        print(f"Total unique target chunks (initial + surrounding): {len(target_ids_to_fetch)}")
+
+        # Step 3: Fetch All Target Chunks by ID
+        if not target_ids_to_fetch:
+             return []
+
+        final_results = collection.get(
+            ids=list(target_ids_to_fetch),
+            include=['documents']
+        )
+
+        # Step 4: Return Documents
+        retrieved_docs = final_results.get('documents', [])
+
+        print(f"Retrieved {len(retrieved_docs)} final chunks (including surrounding).")
+        # Note: The order might not be sequential, but contains the relevant + surrounding context.
+        return retrieved_docs
+
+    except Exception as e:
+        print(f"Error during surrounding chunk retrieval: {e}")
         return []

@@ -89,3 +89,22 @@ def delete_library(library_id: int, session: SessionDep):
     session.delete(library)
     session.commit()
     return None # Return None for 204 No Content
+
+
+# New endpoint to force re-indexing a specific library
+@db_router.get('/libraries/{library_id}/reindex', status_code=status.HTTP_200_OK)
+def reindex_library(library_id: int, session: SessionDep):
+    library = session.get(Library, library_id)
+    if not library:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Library not found")
+
+    try:
+        print(f"--- Force re-indexing library ID: {library_id} ---")
+        add_or_update_library(library)
+        print(f"--- Successfully re-indexed library ID: {library_id} ---")
+        return {"message": f"Library {library_id} re-indexed successfully."}
+    except Exception as e:
+        print(f"--- Error during force re-indexing library {library_id}: {e} ---")
+        # Raise an exception here so we know if re-indexing failed
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail=f"Failed to re-index library {library_id}: {str(e)}")

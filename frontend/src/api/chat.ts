@@ -14,6 +14,9 @@ export const sendPrompt = async (prompt: string, backendUrl: string, model: stri
 
     // Map VersionType to the correct API endpoint
     switch (ver) {
+      case "0":
+        chat_endpoint = 'api/chat'; // Version 0 is Plain
+        break;
       case "1":
         chat_endpoint = 'api/chat-pipeline'; // Version 1 is Pipeline
         break;

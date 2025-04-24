@@ -3,7 +3,6 @@ import { Routes, Route } from 'react-router-dom'; // Import routing components
 import { sendPrompt } from './api/chat';
 import { LibraryToggle } from './components/LibraryToggle';
 import { LibraryFormPage } from './pages/LibraryFormPage'; // Import the actual page component
-import { Button } from './components/ui/button';
 import { useLibrary } from './context/LibraryContext';
 import { VersionToggleGroup, VersionType } from './components/VersionToggle'; // Import VersionType here
 
@@ -25,7 +24,7 @@ const MainPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { selectedLibraries } = useLibrary();
 
-  const [version, setVersion] = useState<VersionType>("1") // Use imported VersionType
+  const [version, setVersion] = useState<VersionType>("0") // Default to Plain mode ("0")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,10 +119,6 @@ const MainPage = () => {
           </span>
         </button>
       </form>
-
-      <Button onClick={() => {console.log(selectedLibraries)}}>
-          Check selected libraries
-      </Button>
 
       {/* Response/Error Display */}
       <div className='w-3/4 pb-8'>

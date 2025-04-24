@@ -3,8 +3,8 @@ from fastapi import APIRouter, HTTPException, Request
 import httpx
 import json
 import os
-# Import both RAG retrieval and the original library loading function
-from rag_service import retrieve_relevant_chunks
+# Import RAG retrieval functions and library loading function
+from rag_service import retrieve_relevant_chunks, retrieve_relevant_chunks_surrounding # Import both
 from database import get_libraries # Re-added for chat-ver2
 
 chat_router = APIRouter()
@@ -12,17 +12,29 @@ chat_router = APIRouter()
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 DEFAULT_MODEL = "llama3.2:3b"
 
-async def read_config_files():
+# Reads the specific preprompt file needed for the plain /chat endpoint
+async def read_plain_preprompt():
     try:
+        with open("config/preprompt.txt", "r") as f:
+            return f.read()
+    except FileNotFoundError:
+        # If the specific file is missing, raise an error for this endpoint
+        raise HTTPException(status_code=500, detail="Plain preprompt file (config/preprompt.txt) not found.")
+
+# Reads config files needed for RAG/Pipeline endpoints
+async def read_rag_config_files():
+    try:
+        # Renamed variable to avoid confusion with the plain preprompt
         with open("config/preprompt-2.txt", "r") as f:
-            preprompt = f.read()
+            rag_preprompt = f.read()
         with open("config/endoff.txt", "r") as f:
             endoff = f.read()
         with open("config/retrieval.txt", "r") as f:
             retrieval_prompt = f.read()
-        return preprompt, endoff, retrieval_prompt
+        return rag_preprompt, endoff, retrieval_prompt
     except FileNotFoundError:
-        raise HTTPException(status_code=500, detail="Configuration files not found.")
+        # Consider which files are truly essential for RAG/Pipeline
+        raise HTTPException(status_code=500, detail="One or more RAG/Pipeline configuration files not found.")
 
 async def generate_llm_response(prompt, model=DEFAULT_MODEL):
     async with httpx.AsyncClient() as client:
@@ -46,8 +58,43 @@ async def generate_llm_response(prompt, model=DEFAULT_MODEL):
         response_data = response.json()
         return response_data["response"]
 
+
+# New Plain Chat Endpoint
+@chat_router.post("/chat")
+async def plain_chat_handler(request: Request):
+    try:
+        data = await request.json()
+        user_prompt = data.get("prompt")
+        selected_model = data.get("model", DEFAULT_MODEL)
+
+        if not user_prompt:
+            raise HTTPException(status_code=400, detail="Prompt is required.")
+
+        # Read the specific preprompt for this endpoint
+        plain_preprompt_template = await read_plain_preprompt()
+
+        # Construct the prompt using the plain template
+        full_prompt = plain_preprompt_template.replace("[INSERT QUESTION]", user_prompt)
+
+        print("------ Plain Chat Prompt -------")
+        print(full_prompt)
+
+        # Generate response using the LLM
+        llm_response = await generate_llm_response(full_prompt, selected_model)
+
+        return {"response": llm_response}
+
+    except HTTPException as e:
+        # Re-raise HTTPExceptions directly
+        raise e
+    except Exception as e:
+        print(f"Unhandled error in plain chat handler: {e}")
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
+
+
+# RAG Chat Endpoint (Modified to use specific config reader)
 @chat_router.post("/chat-rag")
-async def chat_handler(request: Request):
+async def chat_rag_handler(request: Request): # Renamed handler function
     try:
         data = await request.json()
         user_prompt = data.get("prompt")
@@ -59,15 +106,16 @@ async def chat_handler(request: Request):
         # Get selected libraries
         selected_libraries = data.get("selected_libraries", []) # Expecting a list of integers (IDs)
 
-        # Read config files early
-        preprompt, endoff, _ = await read_config_files() # retrieval_prompt no longer needed here
+        # Read config files for RAG
+        rag_preprompt, endoff, _ = await read_rag_config_files() # Use RAG config reader
 
         if selected_libraries:
-            # Libraries selected, perform RAG retrieval
-            print("------ Performing RAG retrieval -------")
-            retrieved_docs = retrieve_relevant_chunks(user_prompt, selected_libraries)
+            # Libraries selected, perform RAG retrieval with surrounding chunks
+            print("------ Performing RAG retrieval (with surrounding) -------")
+            # Use the new function here
+            retrieved_docs = retrieve_relevant_chunks_surrounding(user_prompt, selected_libraries)
             retrieved_context = "\n\n---\n\n".join(retrieved_docs) # Join chunks with separators
-            if not retrieved_context:
+            if not retrieved_docs: # Check if the list itself is empty
                  retrieved_context = "No relevant documentation found in the selected libraries."
         else:
             # No libraries selected, skip RAG
@@ -77,10 +125,10 @@ async def chat_handler(request: Request):
         # Construct prompt conditionally
         if retrieved_context is not None:
             # Include context if retrieval was performed (even if empty or 'not found' message)
-            full_prompt = f"Relevant Documentation:\n{retrieved_context}\n\n---\n\n{preprompt.replace('[INSERT QUESTION]', user_prompt)}"
+            full_prompt = f"Relevant Documentation:\n{retrieved_context}\n\n---\n\n{rag_preprompt.replace('[INSERT QUESTION]', user_prompt)}" # Use rag_preprompt
         else:
             # No libraries selected, use only the base preprompt
-            full_prompt = f"{preprompt.replace('[INSERT QUESTION]', user_prompt)}"
+            full_prompt = f"{rag_preprompt.replace('[INSERT QUESTION]', user_prompt)}" # Use rag_preprompt
 
         # endoff logic remains unused
         
@@ -129,8 +177,8 @@ async def chat_handler_two_stage(request: Request):
 
         # Get the libraries using the original method
         selected_libraries = data.get("selected_libraries", [])
-        # Read config files
-        preprompt, endoff, retrieval_prompt = await read_config_files()
+        # Read config files for Pipeline
+        rag_preprompt, endoff, retrieval_prompt = await read_rag_config_files() # Use RAG config reader
 
         if selected_libraries:
             # Libraries selected, proceed with Stage 1 analysis
@@ -157,7 +205,7 @@ async def chat_handler_two_stage(request: Request):
 
         # STAGE 2: Use the extracted information (or default message) for final response
         # Use the retrieved context in the final prompt
-        stage2_prompt = f"## Relevant Documentation:\n{stage1_response}\n\n--- End of Relevant Documentation ---\n\n{preprompt.replace('[INSERT QUESTION]', user_prompt)}"
+        stage2_prompt = f"## Relevant Documentation:\n{stage1_response}\n\n--- End of Relevant Documentation ---\n\n{rag_preprompt.replace('[INSERT QUESTION]', user_prompt)}" # Use rag_preprompt
 
         print("------ Stage 2 Prompt -------")
         print(stage2_prompt)
@@ -192,18 +240,19 @@ async def chat_handler_rag_2(request: Request):
         # Get selected libraries
         selected_libraries = data.get("selected_libraries", []) # Expecting a list of integers (IDs)
 
-        # Read config files
-        preprompt, endoff, retrieval_prompt = await read_config_files()
+        # Read config files for RAG-2
+        rag_preprompt, endoff, retrieval_prompt = await read_rag_config_files() # Use RAG config reader
 
         condensed_context = None # Initialize to None
 
         if selected_libraries:
-            # Libraries selected, perform RAG retrieval
-            print("------ Performing RAG retrieval (RAG-2) -------")
-            retrieved_docs = retrieve_relevant_chunks(user_prompt, selected_libraries)
+            # Libraries selected, perform RAG retrieval with surrounding chunks
+            print("------ Performing RAG retrieval (with surrounding) (RAG-2) -------")
+            # Use the new function here
+            retrieved_docs = retrieve_relevant_chunks_surrounding(user_prompt, selected_libraries)
             raw_retrieved_context = "\n\n---\n\n".join(retrieved_docs) # Join chunks with separators
 
-            if not raw_retrieved_context:
+            if not retrieved_docs: # Check if the list itself is empty
                  raw_retrieved_context = "No relevant documentation found in the selected libraries."
                  condensed_context = raw_retrieved_context # Use the 'not found' message directly
                  print("------ Condensation Skipped (No Docs Found) (RAG-2) -------")
@@ -227,7 +276,7 @@ async def chat_handler_rag_2(request: Request):
 
 
         # STAGE 2: Use the condensed context (or default message) for final response
-        stage2_prompt = f"## Relevant Documentation:\n{condensed_context}\n\n--- End of Relevant Documentation ---\n\n{preprompt.replace('[INSERT QUESTION]', user_prompt)}"
+        stage2_prompt = f"## Relevant Documentation:\n{condensed_context}\n\n--- End of Relevant Documentation ---\n\n{rag_preprompt.replace('[INSERT QUESTION]', user_prompt)}" # Use rag_preprompt
 
         print("------ Stage 2 Prompt (RAG-2) -------")
         print(stage2_prompt)

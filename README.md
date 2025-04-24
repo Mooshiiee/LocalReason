@@ -23,16 +23,15 @@ LocalReason is a local-first AI reasoning engine that performs initial Chain-of-
 
 ```
 .
-├── chroma_db/        # Persistent ChromaDB vector store
+├── chroma_db/        # ChromaDB vector store (will be generated on startup)
 ├── config/           # Prompt templates and configuration files
-├── frontend/         # React frontend application source
+├── frontend/         # React/Vite frontend application source
 ├── routers/          # FastAPI backend API route definitions
-├── api/              # (Potentially unused or for specific API logic)
 ├── database.db       # SQLite database (likely for library metadata via SQLModel)
 ├── database.py       # SQLModel definitions and database interaction logic
 ├── main.py           # FastAPI application entry point
 ├── rag_service.py    # Core logic for RAG indexing and retrieval
-├── requirements.txt  # Backend Python dependencies
+├── requirements.txt  # Python dependencies
 └── README.md         # This file
 ```
 
@@ -70,8 +69,9 @@ LocalReason is a local-first AI reasoning engine that performs initial Chain-of-
   cd .. 
   fastapi dev main.py
   ```
-    *   Connects to Ollama API via default port 
-    *   The backend API will typically be available at `http://127.0.0.1:8000`.
+  Connects to Ollama API via default port 
+  
+  The backend API will typically be available at `http://127.0.0.1:8000`.
 
 
 

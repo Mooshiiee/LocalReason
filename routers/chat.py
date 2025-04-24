@@ -25,7 +25,7 @@ async def read_plain_preprompt():
 async def read_rag_config_files():
     try:
         # Renamed variable to avoid confusion with the plain preprompt
-        with open("config/preprompt-2.txt", "r") as f:
+        with open("config/preprompt.txt", "r") as f:
             rag_preprompt = f.read()
         with open("config/endoff.txt", "r") as f:
             endoff = f.read()

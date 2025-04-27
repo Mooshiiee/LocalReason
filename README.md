@@ -1,6 +1,6 @@
 # LocalReason
 
-LocalReason is a local-first AI reasoning engine that performs initial Chain-of-Thought (CoT) reasoning using lightweight models (like LLaMA 3B) before querying stronger LLMs. It supports Retrieval-Augmented Generation (RAG) from user-selected documentation and enables structured, explainable prompt expansion entirely offline. Built with FastAPI and Vite, it offers a modular, privacy-friendly solution for intelligent local inference workflows.
+LocalReason is a local-first AI reasoning engine that performs initial Chain-of-Thought (CoT) reasoning using llama3.2:3B before querying stronger LLMs. It supports Retrieval-Augmented Generation (RAG) from user-selected documentation and enables structured, explainable prompt expansion entirely offline. Built with FastAPI and Vite, it offers a modular, privacy-friendly solution for intelligent local inference for coding related tasks.
 
 ## Features
 

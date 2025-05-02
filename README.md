@@ -4,11 +4,11 @@ LocalReason is a local-first AI reasoning engine that performs initial Chain-of-
 
 ## Features
 
-*   **Chat Interface:** Provides a user interface for interacting with an LLM and producing expanded prompts
-*   **RAG Integration:** Leverages ChromaDB and Sentence Transformers to index and retrieve relevant information from local document libraries to enhance LLM responses.
+*   **Chat Interface:** Provides a user interface for interacting with an LLM and producing expanded prompt
 *   **Library Management:** Allows users to add, update, and manage document libraries used for RAG.
-*   **Configurable Prompts:** Utilizes different prompt templates stored in the `config/` directory for various chat modes (e.g., plain chat, RAG chat, multi-stage pipelines).
-*   **Multiple Chat Endpoints:** Offers different API endpoints (`/chat`, `/chat-rag`, `/chat-pipeline`, `/chat-rag-2`) implementing various chat strategies.
+*   **RAG Integration:** Leverages ChromaDB to index and retrieve relevant information from local document libraries to enhance LLM responses.
+*   **Configurable Prompts:** Utilizes different prompt templates stored in the `config/` directory for various chat modes (e.g., plain generation, RAG, or two-step pipeline).
+*   **Multiple Chat Endpoints:** Offers different API endpoints (`/chat`, `/chat-rag`, `/chat-pipeline`, `/chat-rag-2`) implementing various chat strategies. 
 
 ## Tech Stack
 
@@ -64,10 +64,14 @@ LocalReason is a local-first AI reasoning engine that performs initial Chain-of-
   cd frontend
   npm i
   npm run build
-  -- IF ShadCN ERROR : 
-  npx shadcn@latest add utils
   cd .. 
-  fastapi dev main.py
+  fastapi run main.py
+
+  -- IF ShadCN ERROR :
+  cd frontend
+  npx shadcn@latest add utils
+  cd ..
+  fastapi run main.py
   ```
   Connects to Ollama API via default port 
   
